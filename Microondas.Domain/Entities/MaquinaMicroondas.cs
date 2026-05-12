@@ -11,6 +11,7 @@ public sealed class MaquinaMicroondas
     public int Potencia { get; private set; }
     public EstadoMicroondas Estado { get; private set; } = EstadoMicroondas.Inativo;
     public string VisorAquecimento { get; private set; } = string.Empty;
+    public ProgramaAquecimento? ProgramaAtual { get; private set; }
 
     public void Configurar(ConfigurarMicroondasCommand comando)
     {
@@ -28,6 +29,16 @@ public sealed class MaquinaMicroondas
         Potencia = comando.Potencia ?? ValoresPadrao.PotenciaPadrao;
         Estado = EstadoMicroondas.Inativo;
         VisorAquecimento = string.Empty;
+        ProgramaAtual = null;
+    }
+
+    public void ConfigurarPrograma(ProgramaAquecimento programa)
+    {
+        TempoRestanteSegundos = programa.TempoSegundos;
+        Potencia = programa.Potencia;
+        ProgramaAtual = programa;
+        Estado = EstadoMicroondas.Inativo;
+        VisorAquecimento = string.Empty;
     }
 
     public void Iniciar()
@@ -43,6 +54,7 @@ public sealed class MaquinaMicroondas
         TempoRestanteSegundos = ValoresPadrao.AcrescimoTempoSegundos;
         Potencia = ValoresPadrao.PotenciaPadrao;
         VisorAquecimento = string.Empty;
+        ProgramaAtual = null;
         Iniciar();
     }
 
@@ -50,6 +62,9 @@ public sealed class MaquinaMicroondas
     {
         if (Estado != EstadoMicroondas.EmAndamento) 
             return;
+
+        if (ProgramaAtual is { EhPreDefinido: true })
+            throw new ValidacaoMicroondasException("Acréscimo de tempo não é permitido para programas pré-definidos.");
         
         TempoRestanteSegundos += segundos;
         if (TempoRestanteSegundos > ValoresPadrao.TempoMaximoSegundos)
@@ -67,12 +82,14 @@ public sealed class MaquinaMicroondas
                 TempoRestanteSegundos = 0;
                 Potencia = 0;
                 VisorAquecimento = string.Empty;
+                ProgramaAtual = null;
                 break;
             case EstadoMicroondas.Concluido or EstadoMicroondas.Pausado:
                 Estado = EstadoMicroondas.Inativo;
                 TempoRestanteSegundos = 0;
                 Potencia = 0;
                 VisorAquecimento = string.Empty;
+                ProgramaAtual = null;
                 break;
         }
     }
@@ -85,7 +102,8 @@ public sealed class MaquinaMicroondas
         if (TempoRestanteSegundos > 0)
         {
             TempoRestanteSegundos--;
-            VisorAquecimento += new string('.', Potencia) + " ";
+            var caractere = ProgramaAtual?.CaractereAquecimento ?? '.';
+            VisorAquecimento += new string(caractere, Potencia) + " ";
         }
 
         if (TempoRestanteSegundos != 0) 

@@ -18,6 +18,16 @@ Durante o Nível 1, algumas decisões arquiteturais chaves foram tomadas para pr
 4. **Constantes e Padrões Comportamentais:** O código injeta constantes via uma classe estática semântica (`ValoresPadrao`). Lógicas não sujam o fluxo principal e estão devidamente abstraídas.
 5. **Padrão Builder (Testes):** Os testes em xUnit utilizam o design pattern *Test Data Builder* com auxílio do `Bogus`, herdando de um `BaseBuilder<T>`.
 
+## Decisões Arquiteturais e Padrões (Nível 2)
+
+Durante o Nível 2 (Programas Pré-definidos), as seguintes abordagens foram aplicadas para suportar a complexidade e garantir a extensibilidade:
+
+1. **Princípio Aberto/Fechado (SOLID):** A arquitetura foi expandida usando herança sobre a classe abstrata `ProgramaAquecimento`. Todos os programas garantem imutabilidade (exigência da regra de negócio) e isso permite a adição infinita de novos alimentos sem a necessidade de modificar o núcleo da Máquina de Micro-ondas.
+2. **Padrão Repository:** Para manter um código limpo e já preparar terreno para o Nível 3 (Persistência EM SQL Server), o acesso à lista dos 5 programas pré-definidos ocorre limpidamente através da abstração `IProgramaRepository`.
+3. **Desacoplamento e Separação da UI:** O monolítico inicial da UI foi fracionado. A apresentação visual agora está concentrada na classe `MicroondasVisor`, enquanto o roteamento de escolhas via teclado e inputs são domínios exclusivos da classe `MicroondasMenu`.
+4. **Eliminação de Magic Numbers:** A classe `ValoresPadrao` foi estendida para centralizar rigorosamente os tempos (em segundos) e as potências pré-definidas de todos os 5 programas de nível 2, deixando a parametrização visível num único local do sistema.
+5. **Correção de Bug (Cancelamento de Fluxo Manual):** Foi identificado e corrigido um bug onde o usuário ficava "preso" nas perguntas de entrada de Tempo e Potência após escolher a opção manual, não tendo nenhum botão designado para cancelar a ação. A solução implementada permitiu que ao deixar o valor vazio ou digitar "0", o sistema aborta o fluxo e limpa a máquina (equivalente direto à tecla Pausar/Cancelar), resolvendo a inconsistência.
+
 ## Como Instalar e Usar
 
 ### Pré-requisitos
@@ -26,12 +36,13 @@ Durante o Nível 1, algumas decisões arquiteturais chaves foram tomadas para pr
 ### Executando a Aplicação
 No diretório raiz do projeto, abra o seu terminal e execute:
 ```bash
-dotnet run --project Microondas.Console
+cd Microondas.Console
+dotnet run
 ```
 *O menu interativo guiará as opções de configuração e as simulações em tempo real.*
 
 ### Rodando a Suíte de Testes
-Para atestar a integridade das regras do Nível 1, execute:
+Para atestar a integridade das regras do Nível 1 e Nível 2, execute:
 ```bash
 dotnet test
 ```

@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microondas.Domain.Entities;
 using Microondas.Domain.Enums;
 using Microondas.Domain.Exceptions;
+using Microondas.Domain.Entities.Programas;
 using Microondas.Tests.TestBuilders;
 
 namespace Microondas.Tests.Domain;
@@ -109,5 +110,73 @@ public sealed class MaquinaMicroondasTest : IDisposable
         maquina.TempoRestanteSegundos.Should().Be(0);
         maquina.Estado.Should().Be(EstadoMicroondas.Concluido);
         maquina.VisorAquecimento.Should().Be(". Aquecimento concluído");
+    }
+
+    [Fact]
+    public void ConfigurarPrograma_DevePreencherTempoPotenciaEAtribuirPrograma()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var programa = new ProgramaPipoca();
+
+        // Act
+        maquina.ConfigurarPrograma(programa);
+
+        // Assert
+        maquina.ProgramaAtual.Should().Be(programa);
+        maquina.TempoRestanteSegundos.Should().Be(180);
+        maquina.Potencia.Should().Be(7);
+        maquina.Estado.Should().Be(EstadoMicroondas.Inativo);
+    }
+
+    [Fact]
+    public void AdicionarTempo_QuandoProgramaPreDefinido_DeveLancarExcecao()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var programa = new ProgramaPipoca();
+        maquina.ConfigurarPrograma(programa);
+        maquina.Iniciar();
+
+        // Act
+        var act = () => maquina.AdicionarTempo(30);
+
+        // Assert
+        act.Should().Throw<ValidacaoMicroondasException>()
+           .WithMessage("Acréscimo de tempo não é permitido para programas pré-definidos.");
+    }
+
+    [Fact]
+    public void AvancarSegundo_QuandoProgramaPreDefinido_DeveUsarCaractereDoPrograma()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var programa = new ProgramaLeite(); // caractere 'l', potencia 5
+        maquina.ConfigurarPrograma(programa);
+        maquina.Iniciar();
+
+        // Act
+        maquina.AvancarSegundo();
+
+        // Assert
+        maquina.VisorAquecimento.Should().Be("lllll ");
+    }
+
+    [Fact]
+    public void PausarOuCancelar_QuandoCancelar_DeveLimparProgramaAtual()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var programa = new ProgramaPipoca();
+        maquina.ConfigurarPrograma(programa);
+        
+        // At this point, Estado is Inativo, so calling PausarOuCancelar will clear it
+        // Act
+        maquina.PausarOuCancelar();
+
+        // Assert
+        maquina.ProgramaAtual.Should().BeNull();
+        maquina.TempoRestanteSegundos.Should().Be(0);
+        maquina.Potencia.Should().Be(0);
     }
 }
