@@ -63,7 +63,7 @@ public sealed class MaquinaMicroondas
         if (Estado != EstadoMicroondas.EmAndamento) 
             return;
 
-        if (ProgramaAtual is { EhPreDefinido: true })
+        if (ProgramaAtual is { EhPadrao: true })
             throw new ValidacaoMicroondasException("Acréscimo de tempo não é permitido para programas pré-definidos.");
         
         TempoRestanteSegundos += segundos;

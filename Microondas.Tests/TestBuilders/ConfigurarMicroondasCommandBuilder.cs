@@ -6,8 +6,8 @@ public class ConfigurarMicroondasCommandBuilder : BaseBuilder<ConfigurarMicroond
 {
     public ConfigurarMicroondasCommandBuilder()
     {
-        Faker.RuleFor(r => r.TempoEmSegundos, f => 30);
-        Faker.RuleFor(r => r.Potencia, f => 10);
+        Faker.RuleFor(r => r.TempoEmSegundos, _ => 30);
+        Faker.RuleFor(r => r.Potencia, _ => 10);
     }
 
     public ConfigurarMicroondasCommandBuilder ComTempo(int tempoEmSegundos)
