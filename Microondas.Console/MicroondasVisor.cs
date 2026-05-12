@@ -14,10 +14,11 @@ public class MicroondasVisor(MaquinaMicroondas maquina)
         
         if (maquina.Estado is EstadoMicroondas.EmAndamento or EstadoMicroondas.Pausado)
         {
-            if (maquina.ProgramaAtual != null)
+            var p = maquina.ProgramaAtual;
+            if (p != null)
             {
-                System.Console.WriteLine($"Programa: {maquina.ProgramaAtual.Nome}");
-                System.Console.WriteLine($"Instruções: {maquina.ProgramaAtual.Instrucoes}");
+                System.Console.WriteLine($"Programa: {p.Nome} | {(p is { EhPadrao: false } ? "Customizado" : "Padrão")}");
+                System.Console.WriteLine($"Instruções: {(string.IsNullOrWhiteSpace(p.Instrucoes) ? "Nenhuma" : p.Instrucoes)}");
             }
             System.Console.WriteLine($"Tempo Restante: {maquina.ObterTempoFormatado()}");
             System.Console.WriteLine($"Potência: {maquina.Potencia}");
@@ -33,7 +34,7 @@ public class MicroondasVisor(MaquinaMicroondas maquina)
 
     public void TratarLoopEmAndamento()
     {
-        var permiteAcrescimo = maquina.ProgramaAtual == null || !maquina.ProgramaAtual.EhPreDefinido;
+        var permiteAcrescimo = maquina.ProgramaAtual == null || !maquina.ProgramaAtual.EhPadrao;
 
         System.Console.WriteLine(permiteAcrescimo
             ? "\n[Aquecimento em andamento... Pressione '2' para +30s ou '3' para Pausar/Cancelar]"
