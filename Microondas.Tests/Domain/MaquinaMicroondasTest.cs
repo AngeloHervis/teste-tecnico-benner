@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microondas.Domain.Entities;
 using Microondas.Domain.Enums;
 using Microondas.Domain.Exceptions;
-using Microondas.Domain.Entities.Programas;
 using Microondas.Tests.TestBuilders;
 
 namespace Microondas.Tests.Domain;
@@ -117,7 +116,7 @@ public sealed class MaquinaMicroondasTest : IDisposable
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
-        var programa = new ProgramaPipoca();
+        var programa = new ProgramaAquecimentoBuilder().ComTempo(180).ComPotencia(7).EhPadrao().Build();
 
         // Act
         maquina.ConfigurarPrograma(programa);
@@ -134,7 +133,7 @@ public sealed class MaquinaMicroondasTest : IDisposable
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
-        var programa = new ProgramaPipoca();
+        var programa = new ProgramaAquecimentoBuilder().ComTempo(180).ComPotencia(7).EhPadrao().Build();
         maquina.ConfigurarPrograma(programa);
         maquina.Iniciar();
 
@@ -151,7 +150,7 @@ public sealed class MaquinaMicroondasTest : IDisposable
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
-        var programa = new ProgramaLeite(); // caractere 'l', potencia 5
+        var programa = new ProgramaAquecimentoBuilder().ComNome("Leite").ComTempo(300).ComPotencia(5).ComCaractere('!').EhPadrao().Build();
         maquina.ConfigurarPrograma(programa);
         maquina.Iniciar();
 
@@ -159,7 +158,7 @@ public sealed class MaquinaMicroondasTest : IDisposable
         maquina.AvancarSegundo();
 
         // Assert
-        maquina.VisorAquecimento.Should().Be("lllll ");
+        maquina.VisorAquecimento.Should().Be("!!!!! ");
     }
 
     [Fact]
@@ -167,10 +166,9 @@ public sealed class MaquinaMicroondasTest : IDisposable
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
-        var programa = new ProgramaPipoca();
+        var programa = new ProgramaAquecimentoBuilder().ComTempo(180).ComPotencia(7).EhPadrao().Build();
         maquina.ConfigurarPrograma(programa);
         
-        // At this point, Estado is Inativo, so calling PausarOuCancelar will clear it
         // Act
         maquina.PausarOuCancelar();
 

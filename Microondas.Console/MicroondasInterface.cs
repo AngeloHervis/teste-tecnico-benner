@@ -1,26 +1,24 @@
 using Microondas.Domain.Entities;
+using Microondas.Domain.Enums;
 using Microondas.Domain.Exceptions;
 using Microondas.Domain.Interfaces;
-using Microondas.Domain.Services;
-using Microondas.Domain.Enums;
 
 namespace Microondas.Console;
 
 public class MicroondasInterface
 {
     private readonly MaquinaMicroondas _maquina = new();
-    private readonly IProgramaRepository _programaRepository = new ProgramaRepository();
     private readonly MicroondasMenu _menu;
     private readonly MicroondasVisor _visor;
     private bool _rodando = true;
 
-    public MicroondasInterface()
+    public MicroondasInterface(IProgramaService programaService)
     {
-        _menu = new MicroondasMenu(_maquina, _programaRepository);
+        _menu = new MicroondasMenu(_maquina, programaService);
         _visor = new MicroondasVisor(_maquina);
     }
 
-    public void IniciarLoop()
+    public async Task IniciarLoopAsync()
     {
         while (_rodando)
         {
@@ -38,7 +36,7 @@ public class MicroondasInterface
 
             try
             {
-                _rodando = _menu.ProcessarOpcao(opcao);
+                _rodando = await _menu.ProcessarOpcaoAsync(opcao);
             }
             catch (ValidacaoMicroondasException ex)
             {
