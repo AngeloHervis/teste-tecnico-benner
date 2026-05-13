@@ -55,8 +55,8 @@ public class MicroondasMenu(MaquinaMicroondas maquina, IProgramaService programa
         for (var i = 0; i < programas.Count; i++)
         {
             var p = programas[i];
-            var prefix = p.EhPadrao ? "" : "\x1b[3m";
-            var suffix = p.EhPadrao ? "" : "\x1b[23m";
+            var prefix = p.EhPadrao ? "" : "\e[3m";
+            var suffix = p.EhPadrao ? "" : "\e[23m";
             
             System.Console.WriteLine($"{i + 1} - {prefix}{p.Nome} (Alimento: {p.Alimento}, Tempo: {p.TempoSegundos}s, Potência: {p.Potencia}){suffix}");
         }
@@ -77,19 +77,29 @@ public class MicroondasMenu(MaquinaMicroondas maquina, IProgramaService programa
     private async Task ProcessarCadastroProgramaAsync()
     {
         System.Console.WriteLine("\n=== Novo Programa Customizado ===");
+        System.Console.WriteLine("(Deixe vazio ou digite '0' em qualquer campo para cancelar)");
         
-        var nome = LerTextoObrigatorio("Nome: ");
+        var nome = await LerNomeUnicoAsync("Nome: ");
+        if (nome == null) return;
+
         var alimento = LerTextoObrigatorio("Alimento: ");
+        if (alimento == null) return;
+
         var tempo = LerIntNoIntervalo("Tempo (segundos): ", 1, 3600);
+        if (tempo == null) return;
+
         var potencia = LerIntNoIntervalo("Potência (1-10): ", 1, 10);
-        var caractere = LerCaractereUnico("Caractere de Aquecimento: ");
+        if (potencia == null) return;
+
+        var caractere = await LerCaractereUnicoAsync("Caractere de Aquecimento: ");
+        if (caractere == null) return;
         
         System.Console.Write("Instruções (opcional): ");
         var instrucoes = System.Console.ReadLine() ?? "";
 
         try
         {
-            var dto = new ProgramaDto(nome, alimento, tempo, potencia, caractere, instrucoes, false);
+            var dto = new ProgramaDto(nome, alimento, tempo.Value, potencia.Value, caractere.Value, instrucoes, false);
             var novoPrograma = dto.ParaEntidade();
             
             await programaService.CadastrarAsync(novoPrograma);
@@ -105,47 +115,80 @@ public class MicroondasMenu(MaquinaMicroondas maquina, IProgramaService programa
         System.Console.ReadKey();
     }
 
-    private static string LerTextoObrigatorio(string prompt)
+    private async Task<string?> LerNomeUnicoAsync(string prompt)
     {
         while (true)
         {
             System.Console.Write(prompt);
             var input = System.Console.ReadLine();
-            
-            if (!string.IsNullOrWhiteSpace(input)) 
-                return input;
-            
-            System.Console.WriteLine("[ERRO]: Este campo é obrigatório.");
+
+            if (string.IsNullOrWhiteSpace(input) || input == "0")
+                return null;
+
+            if (await programaService.ExisteNomeAsync(input))
+            {
+                System.Console.WriteLine($"[ERRO]: Já existe um programa cadastrado com o nome '{input}'.");
+                continue;
+            }
+
+            return input;
         }
     }
 
-    private static int LerIntNoIntervalo(string prompt, int min, int max)
+    private static string? LerTextoObrigatorio(string prompt)
+    {
+        System.Console.Write(prompt);
+        var input = System.Console.ReadLine();
+        
+        if (string.IsNullOrWhiteSpace(input) || input == "0") 
+            return null;
+        
+        return input;
+    }
+
+    private static int? LerIntNoIntervalo(string prompt, int min, int max)
     {
         while (true)
         {
             System.Console.Write(prompt);
+            var input = System.Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(input) || input == "0")
+                return null;
             
-            if (int.TryParse(System.Console.ReadLine(), out var result) && result >= min && result <= max)
+            if (int.TryParse(input, out var result) && result >= min && result <= max)
                 return result;
             
             System.Console.WriteLine($"[ERRO]: Por favor, insira um número entre {min} e {max}.");
         }
     }
 
-    private static char LerCaractereUnico(string prompt)
+    private async Task<char?> LerCaractereUnicoAsync(string prompt)
     {
         while (true)
         {
             System.Console.Write(prompt);
             var input = System.Console.ReadLine();
-            if (!string.IsNullOrEmpty(input) && input.Length == 1)
+
+            if (string.IsNullOrWhiteSpace(input) || input == "0")
+                return null;
+
+            if (input.Length == 1)
             {
                 var c = input[0];
-                if (c != '.') 
-                    return c;
+                if (c == '.')
+                {
+                    System.Console.WriteLine("[ERRO]: O caractere '.' é reservado para o aquecimento padrão.");
+                    continue;
+                }
+
+                if (await programaService.ExisteCaractereAsync(c))
+                {
+                    System.Console.WriteLine($"[ERRO]: O caractere '{c}' já está sendo usado por outro programa.");
+                    continue;
+                }
                 
-                System.Console.WriteLine("[ERRO]: O caractere '.' é reservado para o aquecimento padrão.");
-                continue;
+                return c;
             }
             System.Console.WriteLine("[ERRO]: Insira exatamente um caractere.");
         }

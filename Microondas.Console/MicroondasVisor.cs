@@ -34,7 +34,7 @@ public class MicroondasVisor(MaquinaMicroondas maquina)
 
     public void TratarLoopEmAndamento()
     {
-        var permiteAcrescimo = maquina.ProgramaAtual == null || !maquina.ProgramaAtual.EhPadrao;
+        var permiteAcrescimo = maquina.ProgramaAtual == null;
 
         System.Console.WriteLine(permiteAcrescimo
             ? "\n[Aquecimento em andamento... Pressione '2' para +30s ou '3' para Pausar/Cancelar]"
@@ -51,14 +51,7 @@ public class MicroondasVisor(MaquinaMicroondas maquina)
             if (!permiteAcrescimo || key is not (ConsoleKey.D2 or ConsoleKey.NumPad2))
                 continue;
             
-            try
-            {
-                maquina.AdicionarTempo(ValoresPadrao.AcrescimoTempoSegundos);
-            }
-            catch (ValidacaoMicroondasException ex)
-            {
-                ExibirErroValidacao(ex.Message);
-            }
+            maquina.AdicionarTempo(ValoresPadrao.AcrescimoTempoSegundos);
         }
         
         maquina.AvancarSegundo();
