@@ -22,4 +22,9 @@ public class ProgramaRepository(ApplicationDbContext context) : IProgramaReposit
     {
         return await context.ProgramasAquecimento.AnyAsync(p => p.CaractereAquecimento == caractere);
     }
+
+    public async Task<bool> ExisteNomeAsync(string nome)
+    {
+        return await context.ProgramasAquecimento.AnyAsync(p => p.Nome.ToLower() == nome.ToLower());
+    }
 }
