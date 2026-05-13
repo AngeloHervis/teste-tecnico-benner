@@ -21,11 +21,7 @@ public sealed class MaquinaMicroondas
         if (comando.Potencia is < ValoresPadrao.PotenciaMinima or > ValoresPadrao.PotenciaMaxima)
             throw new ValidacaoMicroondasException($"Potência deve ser um valor de {ValoresPadrao.PotenciaMinima} a {ValoresPadrao.PotenciaMaxima}");
 
-        var tempoReal = comando.TempoEmSegundos;
-        if (comando.TempoEmSegundos is >= 60 and <= 100)
-            tempoReal = comando.TempoEmSegundos;
-
-        TempoRestanteSegundos = tempoReal;
+        TempoRestanteSegundos = comando.TempoEmSegundos;
         Potencia = comando.Potencia ?? ValoresPadrao.PotenciaPadrao;
         Estado = EstadoMicroondas.Inativo;
         VisorAquecimento = string.Empty;
@@ -41,21 +37,36 @@ public sealed class MaquinaMicroondas
         VisorAquecimento = string.Empty;
     }
 
-    public void Iniciar()
+    public void Iniciar(ConfigurarMicroondasCommand? comando = null)
     {
-        if (TempoRestanteSegundos == 0 && Estado != EstadoMicroondas.Pausado)
-            throw new ValidacaoMicroondasException("Nenhum tempo configurado.");
+        if (Estado == EstadoMicroondas.EmAndamento)
+        {
+            AdicionarTempo(ValoresPadrao.AcrescimoTempoSegundos);
+            return;
+        }
+
+        if (Estado == EstadoMicroondas.Pausado)
+        {
+            Estado = EstadoMicroondas.EmAndamento;
+            return;
+        }
+
+        if (comando != null)
+        {
+            Configurar(comando);
+            Estado = EstadoMicroondas.EmAndamento;
+            return;
+        }
+
+        if (TempoRestanteSegundos == 0)
+        {
+            TempoRestanteSegundos = ValoresPadrao.AcrescimoTempoSegundos;
+            Potencia = ValoresPadrao.PotenciaPadrao;
+            VisorAquecimento = string.Empty;
+            ProgramaAtual = null;
+        }
 
         Estado = EstadoMicroondas.EmAndamento;
-    }
-
-    public void InicioRapido()
-    {
-        TempoRestanteSegundos = ValoresPadrao.AcrescimoTempoSegundos;
-        Potencia = ValoresPadrao.PotenciaPadrao;
-        VisorAquecimento = string.Empty;
-        ProgramaAtual = null;
-        Iniciar();
     }
 
     public void AdicionarTempo(int segundos)
