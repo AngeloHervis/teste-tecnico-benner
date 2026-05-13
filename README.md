@@ -6,7 +6,7 @@ Simulador de micro-ondas desenvolvido para avaliação técnica, focando na apli
 
 ## 📸 Visual da Aplicação (Nível 4)
 
-![Screenshot da Aplicação Web](img.png)
+![Screenshot da Aplicação Web](img.jpeg)
 
 ---
 
