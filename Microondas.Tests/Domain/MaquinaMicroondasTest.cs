@@ -129,7 +129,7 @@ public sealed class MaquinaMicroondasTest : IDisposable
     }
 
     [Fact]
-    public void AdicionarTempo_QuandoProgramaPreDefinido_DeveLancarExcecao()
+    public void AdicionarTempo_QuandoProgramaPreDefinido_DeveIgnorarComando()
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
@@ -138,11 +138,30 @@ public sealed class MaquinaMicroondasTest : IDisposable
         maquina.Iniciar();
 
         // Act
-        var act = () => maquina.AdicionarTempo(30);
+        maquina.AdicionarTempo(30);
 
         // Assert
-        act.Should().Throw<ValidacaoMicroondasException>()
-           .WithMessage("Acréscimo de tempo não é permitido para programas pré-definidos.");
+        maquina.TempoRestanteSegundos.Should().Be(180);
+    }
+
+    [Fact]
+    public void AdicionarTempo_QuandoProgramaCustomizado_DeveIgnorarComando()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var programa = new ProgramaAquecimentoBuilder()
+            .ComNome("Custom")
+            .ComTempo(180)
+            .EhPadrao(false)
+            .Build();
+        maquina.ConfigurarPrograma(programa);
+        maquina.Iniciar();
+
+        // Act
+        maquina.AdicionarTempo(30);
+
+        // Assert
+        maquina.TempoRestanteSegundos.Should().Be(180);
     }
 
     [Fact]
