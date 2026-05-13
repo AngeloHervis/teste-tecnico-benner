@@ -1,6 +1,5 @@
 using Microondas.Domain.Entities;
 using Microondas.Domain.Exceptions;
-using Xunit;
 using FluentAssertions;
 using Microondas.Tests.TestBuilders;
 

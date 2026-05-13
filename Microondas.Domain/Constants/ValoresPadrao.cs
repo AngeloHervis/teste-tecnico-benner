@@ -11,6 +11,13 @@ public static class ValoresPadrao
     public const int PotenciaPadrao = 10;
     
     public const int AcrescimoTempoSegundos = 30;
-
+    
+    public const int IntervaloStreamStatusMs = 500;
+    public const int DuracaoTokenHoras = 2;
+    public const int UmSegundoEmMilissegundos = 1000;
     public const char CaracterePadrao = '.';
 }
+
+
+
+

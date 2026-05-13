@@ -1,10 +1,8 @@
 using FluentAssertions;
 using Microondas.Domain.Entities;
-using Microondas.Domain.Exceptions;
 using Microondas.Domain.Interfaces;
 using Microondas.Domain.Services;
 using Moq;
-using Xunit;
 using Microondas.Tests.TestBuilders;
 
 namespace Microondas.Tests.Domain;
@@ -20,18 +18,32 @@ public class ProgramaServiceTest
     }
 
     [Fact]
-    public async Task Cadastrar_CaractereDuplicado_DeveLancarExcecao()
+    public async Task Cadastrar_CaractereDuplicado_DeveRetornarErro()
     {
         // Arrange
         var programa = new ProgramaAquecimentoBuilder().ComCaractere('!').Build();
         _repositoryMock.Setup(r => r.ExisteCaractereAsync('!')).ReturnsAsync(true);
 
         // Act
-        var act = async () => await _service.CadastrarAsync(programa);
+        var result = await _service.CadastrarAsync(programa);
 
         // Assert
-        await act.Should().ThrowAsync<ValidacaoMicroondasException>()
-            .WithMessage("*já está sendo usado*");
+        result.IsError.Should().BeTrue();
+        result.Errors.Should().Contain(e => e.Message.Contains("já está sendo usado"));
+    }
+
+    [Fact]
+    public async Task Cadastrar_CaractereReservado_DeveRetornarErro()
+    {
+        // Arrange
+        var programa = new ProgramaAquecimentoBuilder().ComCaractere('.').Build();
+
+        // Act
+        var result = await _service.CadastrarAsync(programa);
+
+        // Assert
+        result.IsError.Should().BeTrue();
+        result.Errors.Should().Contain(e => e.Message.Contains("reservado"));
     }
 
     [Fact]
@@ -59,7 +71,7 @@ public class ProgramaServiceTest
         var result = await _service.ListarAsync();
 
         // Assert
-        result.Should().BeEquivalentTo(programas);
+        result.Data.Should().BeEquivalentTo(programas);
         _repositoryMock.Verify(r => r.ObterTodosAsync(), Times.Once);
     }
 }

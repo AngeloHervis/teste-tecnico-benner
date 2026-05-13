@@ -62,18 +62,32 @@ public sealed class MaquinaMicroondasTest : IDisposable
     }
 
     [Fact]
-    public void InicioRapido_QuandoInvocado_DeveDefinirTrintaSegundosPotenciaDezEIniciar()
+    public void Iniciar_QuandoSemConfiguracao_DeveFazerInicioRapido()
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
 
         // Act
-        maquina.InicioRapido();
+        maquina.Iniciar();
 
         // Assert
         maquina.TempoRestanteSegundos.Should().Be(30);
         maquina.Potencia.Should().Be(10);
         maquina.Estado.Should().Be(EstadoMicroondas.EmAndamento);
+    }
+
+    [Fact]
+    public void Iniciar_QuandoJaEmAndamento_DeveSomarTrintaSegundos()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        maquina.Iniciar();
+
+        // Act
+        maquina.Iniciar();
+
+        // Assert
+        maquina.TempoRestanteSegundos.Should().Be(60);
     }
 
     [Fact]
@@ -145,6 +159,22 @@ public sealed class MaquinaMicroondasTest : IDisposable
     }
 
     [Fact]
+    public void AdicionarTempo_QuandoExcederLimite_DeveLimitarEmDoisMinutos()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var command = new ConfigurarMicroondasCommandBuilder().ComTempo(110).Build();
+        maquina.Configurar(command);
+        maquina.Iniciar();
+
+        // Act
+        maquina.AdicionarTempo(30);
+
+        // Assert
+        maquina.TempoRestanteSegundos.Should().Be(120);
+    }
+
+    [Fact]
     public void AdicionarTempo_QuandoProgramaCustomizado_DeveIgnorarComando()
     {
         // Arrange
@@ -181,19 +211,69 @@ public sealed class MaquinaMicroondasTest : IDisposable
     }
 
     [Fact]
-    public void PausarOuCancelar_QuandoCancelar_DeveLimparProgramaAtual()
+    public void PausarOuCancelar_QuandoEmAndamento_DeveMudarParaPausado()
     {
         // Arrange
         var maquina = new MaquinaMicroondas();
-        var programa = new ProgramaAquecimentoBuilder().ComTempo(180).ComPotencia(7).EhPadrao().Build();
-        maquina.ConfigurarPrograma(programa);
-        
+        maquina.Iniciar();
+
         // Act
         maquina.PausarOuCancelar();
 
         // Assert
-        maquina.ProgramaAtual.Should().BeNull();
+        maquina.Estado.Should().Be(EstadoMicroondas.Pausado);
+        maquina.TempoRestanteSegundos.Should().Be(30);
+    }
+
+    [Fact]
+    public void Iniciar_QuandoPausado_DeveRetomarSemSomarTempo()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        maquina.Iniciar();
+        maquina.PausarOuCancelar();
+
+        // Act
+        maquina.Iniciar();
+
+        // Assert
+        maquina.Estado.Should().Be(EstadoMicroondas.EmAndamento);
+        maquina.TempoRestanteSegundos.Should().Be(30); // Não deve somar +30s na retomada
+    }
+
+    [Fact]
+    public void PausarOuCancelar_QuandoPausado_DeveResetarTudo()
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        maquina.Iniciar();
+        maquina.PausarOuCancelar(); // Primeiro clique (Pausa)
+
+        // Act
+        maquina.PausarOuCancelar(); // Segundo clique (Cancela)
+
+        // Assert
+        maquina.Estado.Should().Be(EstadoMicroondas.Inativo);
         maquina.TempoRestanteSegundos.Should().Be(0);
-        maquina.Potencia.Should().Be(0);
+        maquina.VisorAquecimento.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(10, "10s")]
+    [InlineData(60, "1:00")]
+    [InlineData(90, "1:30")]
+    [InlineData(120, "2:00")]
+    public void ObterTempoFormatado_CenariosDiversos_DeveRetornarFormatoCorreto(int segundos, string esperado)
+    {
+        // Arrange
+        var maquina = new MaquinaMicroondas();
+        var command = new ConfigurarMicroondasCommandBuilder().ComTempo(segundos).Build();
+        maquina.Configurar(command);
+
+        // Act
+        var resultado = maquina.ObterTempoFormatado();
+
+        // Assert
+        resultado.Should().Be(esperado);
     }
 }
