@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microondas.Domain\Microondas.Domain.csproj" />
-    <ProjectReference Include="..\Microondas.Infrastructure\Microondas.Infrastructure.csproj" />
+    <ProjectReference Include="..\Microondas.IoC\Microondas.IoC.csproj" />
   </ItemGroup>
 
   <ItemGroup>

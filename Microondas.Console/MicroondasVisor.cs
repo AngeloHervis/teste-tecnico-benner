@@ -1,7 +1,6 @@
 using Microondas.Domain.Constants;
 using Microondas.Domain.Entities;
 using Microondas.Domain.Enums;
-using Microondas.Domain.Exceptions;
 
 namespace Microondas.Console;
 

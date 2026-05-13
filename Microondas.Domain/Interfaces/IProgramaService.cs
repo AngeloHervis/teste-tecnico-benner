@@ -1,11 +1,12 @@
 using Microondas.Domain.Entities;
+using Microondas.Domain._Base;
 
 namespace Microondas.Domain.Interfaces;
 
 public interface IProgramaService
 {
-    Task<IEnumerable<ProgramaAquecimento>> ListarAsync();
+    Task<ServiceResult<IEnumerable<ProgramaAquecimento>>> ListarAsync();
     Task<bool> ExisteCaractereAsync(char caractere);
     Task<bool> ExisteNomeAsync(string nome);
-    Task CadastrarAsync(ProgramaAquecimento programa);
+    Task<ServiceResult<ProgramaAquecimento>> CadastrarAsync(ProgramaAquecimento programa);
 }
